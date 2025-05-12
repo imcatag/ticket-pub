@@ -31,6 +31,7 @@ type UserProfile = {
   city?: string;
   zipCode?: string;
   tickets?: PurchasedTicket[];
+  preferredGenres: string[];
 }
 
 export function LoginForm({
@@ -55,7 +56,8 @@ export function LoginForm({
       email,
       name: email.split('@')[0], // Use part of email as default name
       location: "",
-      phone: ""
+      phone: "",
+      preferredGenres: []
     })
   }
 
@@ -130,17 +132,28 @@ export function ProfileForm({
   profile,
   onSave,
   onLogout,
+  availableGenres,
   ...props
 }: React.ComponentProps<"div"> & {
   profile: UserProfile;
   onSave: (profile: UserProfile) => void;
   onLogout: () => void;
+  availableGenres: string[];
 }) {
   const [formData, setFormData] = useState(profile)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     onSave(formData)
+  }
+
+  const toggleGenre = (genre: string) => {
+    setFormData(prev => ({
+      ...prev,
+      preferredGenres: prev.preferredGenres.includes(genre)
+        ? prev.preferredGenres.filter(g => g !== genre)
+        : [...prev.preferredGenres, genre]
+    }))
   }
 
   const handleDownloadTicket = (ticket: PurchasedTicket) => {
@@ -168,145 +181,185 @@ export function ProfileForm({
   return (
     <div className={cn("grid grid-cols-1 md:grid-cols-2 gap-6", className)} {...props}>
       {/* Profile Settings Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Profile Settings</CardTitle>
-          <CardDescription>
-            Update your account information
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit}>
-            <div className="flex flex-col gap-6">
-              <div className="grid gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={formData.email}
-                    disabled
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="name">Full Name</Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="John Doe"
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="phone">Phone Number</Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    placeholder="+1 (555) 000-0000"
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="address">Address</Label>
-                  <Input
-                    id="address"
-                    value={formData.location}
-                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                    placeholder="123 Main St"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Profile Settings</CardTitle>
+            <CardDescription>
+              Update your account information
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit}>
+              <div className="flex flex-col gap-6">
+                <div className="grid gap-4">
                   <div className="grid gap-2">
-                    <Label htmlFor="city">City</Label>
+                    <Label htmlFor="email">Email</Label>
                     <Input
-                      id="city"
-                      value={formData.city || ''}
-                      onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                      placeholder="New York"
+                      id="email"
+                      type="email"
+                      value={formData.email}
+                      disabled
                     />
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="zipCode">ZIP Code</Label>
+                    <Label htmlFor="name">Full Name</Label>
                     <Input
-                      id="zipCode"
-                      value={formData.zipCode || ''}
-                      onChange={(e) => setFormData({ ...formData, zipCode: e.target.value })}
-                      placeholder="10001"
+                      id="name"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      placeholder="John Doe"
                     />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="phone">Phone Number</Label>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      value={formData.phone}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      placeholder="+1 (555) 000-0000"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="address">Address</Label>
+                    <Input
+                      id="address"
+                      value={formData.location}
+                      onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                      placeholder="123 Main St"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="city">City</Label>
+                      <Input
+                        id="city"
+                        value={formData.city || ''}
+                        onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                        placeholder="New York"
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="zipCode">ZIP Code</Label>
+                      <Input
+                        id="zipCode"
+                        value={formData.zipCode || ''}
+                        onChange={(e) => setFormData({ ...formData, zipCode: e.target.value })}
+                        placeholder="10001"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
-              <div className="flex gap-2">
-                <Button type="submit" className="flex-1">Save Changes</Button>
-                <Button type="button" variant="outline" onClick={onLogout}>Log Out</Button>
+            </form>
+          </CardContent>
+        </Card>
+
+        {/* Preferences Card - Updated to only show genres */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Genre Preferences</CardTitle>
+            <CardDescription>
+              Select your preferred music genres
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              <div className="space-y-4">
+                <Label>Preferred Genres</Label>
+                <div className="flex flex-wrap gap-2">
+                  {availableGenres.map((genre) => (
+                    <Button
+                      key={genre}
+                      type="button"
+                      variant={formData.preferredGenres.includes(genre) ? "default" : "outline"}
+                      onClick={() => toggleGenre(genre)}
+                      className="rounded-full"
+                    >
+                      {genre}
+                    </Button>
+                  ))}
+                </div>
               </div>
+              <Button type="button" onClick={handleSubmit} className="w-full">
+                Save Preferences
+              </Button>
             </div>
-          </form>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* My Tickets Card */}
-      <Card className="flex flex-col h-[600px]">
-        <CardHeader className="flex-none">
-          <CardTitle>My Tickets</CardTitle>
-          <CardDescription>
-            View and download your purchased tickets
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex-1 min-h-0">
-          <div className="h-full overflow-y-auto pr-2">
-            {formData.tickets && formData.tickets.length > 0 ? (
-              <div className="space-y-4">
-                {formData.tickets.map((ticket) => (
-                  <Card key={ticket.id}>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-lg">{ticket.eventTitle}</CardTitle>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDownloadTicket(ticket)}
-                        className="flex items-center gap-2"
-                      >
-                        <Download className="h-4 w-4" />
-                        Download
-                      </Button>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span>Purchase Date:</span>
-                          <span>{ticket.purchaseDate}</span>
-                        </div>
-                        {ticket.normalTickets > 0 && (
+      <div className="space-y-4">
+        <Card className="flex flex-col h-[685px]">
+          <CardHeader className="flex-none">
+            <CardTitle>My Tickets</CardTitle>
+            <CardDescription>
+              View and download your purchased tickets
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex-1 min-h-0">
+            <div className="h-full overflow-y-auto pr-2">
+              {formData.tickets && formData.tickets.length > 0 ? (
+                <div className="space-y-4">
+                  {formData.tickets.map((ticket) => (
+                    <Card key={ticket.id}>
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-lg">{ticket.eventTitle}</CardTitle>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDownloadTicket(ticket)}
+                          className="flex items-center gap-2"
+                        >
+                          <Download className="h-4 w-4" />
+                          Download
+                        </Button>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2">
                           <div className="flex justify-between text-sm">
-                            <span>Normal Tickets:</span>
-                            <span>{ticket.normalTickets}</span>
+                            <span>Purchase Date:</span>
+                            <span>{ticket.purchaseDate}</span>
                           </div>
-                        )}
-                        {ticket.vipTickets > 0 && (
-                          <div className="flex justify-between text-sm">
-                            <span>VIP Tickets:</span>
-                            <span>{ticket.vipTickets}</span>
+                          {ticket.normalTickets > 0 && (
+                            <div className="flex justify-between text-sm">
+                              <span>Normal Tickets:</span>
+                              <span>{ticket.normalTickets}</span>
+                            </div>
+                          )}
+                          {ticket.vipTickets > 0 && (
+                            <div className="flex justify-between text-sm">
+                              <span>VIP Tickets:</span>
+                              <span>{ticket.vipTickets}</span>
+                            </div>
+                          )}
+                          <div className="flex justify-between font-medium pt-2 border-t">
+                            <span>Total:</span>
+                            <span>${ticket.totalPrice}</span>
                           </div>
-                        )}
-                        <div className="flex justify-between font-medium pt-2 border-t">
-                          <span>Total:</span>
-                          <span>${ticket.totalPrice}</span>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <div className="h-full flex items-center justify-center text-muted-foreground">
-                No tickets purchased yet
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <div className="h-full flex items-center justify-center text-muted-foreground">
+                  No tickets purchased yet
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+        <Button 
+          variant="destructive" 
+          className="w-full"
+          onClick={onLogout}
+        >
+          Logout
+        </Button>
+      </div>
     </div>
   )
 }
