@@ -293,7 +293,7 @@ export function NavigationMenuDemo({
       </Dialog>
 
       <Dialog open={showCartDialog} onOpenChange={setShowCartDialog}>
-        <DialogContent className="sm:max-w-[800px]">
+        <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Shopping Cart</DialogTitle>
             <DialogDescription>
@@ -424,7 +424,11 @@ export function NavigationMenuDemo({
                       </div>
                       <Button 
                         className="w-full mt-4"
-                        onClick={handleCheckout}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleCheckout();
+                        }}
+                        type="button"
                       >
                         {userProfile ? 'Complete Purchase' : 'Login to Checkout'}
                       </Button>
